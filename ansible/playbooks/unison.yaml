@@ -1,0 +1,33 @@
+---
+# Install and setup Unison and lsyncd (to keep the files in sync)
+- hosts: appservers
+  tasks:
+  - name: install packages
+    apt:
+      name: ['unison', 'lsyncd']
+      update_cache: yes
+
+  - name: create unison log directory
+    file:
+      path: /var/log/unison
+      state: directory
+
+  - name: create lsyncd log directory
+    file:
+      path: /var/log/lsyncd
+      state: directory
+
+  - name: create lsyncd config directory
+    file:
+      path: /etc/lsyncd
+      state: directory
+
+  - name: lsyncd unison configuration
+    template:
+      src: lsyncd.j2
+      dest: /etc/lsyncd/lsyncd.conf.lua
+
+  - name: restart lsyncd
+    systemd:
+      name: lsyncd
+      state: restarted

@@ -1,0 +1,17 @@
+  - name: Create_user
+    become: yes
+    hosts: all
+    tasks:
+       - name: Add_user      
+         ansible.builtin.user:
+                 name: Gurgen
+                 shell: /bin/bash
+                 group: sudo
+                 password: Qwerty123
+                 append: yes
+       - name: Create_ssh_key
+         ansible.builtin.user:
+                 name: Gurgen
+                 generate_ssh_key: yes
+                 ssh_key_file: .ssh/id_rsa
+

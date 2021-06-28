@@ -1,0 +1,9 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+  - name: install
+    apt: 
+      pkg: "{{ all_packages }}" 
+      state: latest
+

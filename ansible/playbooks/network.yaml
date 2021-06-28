@@ -1,0 +1,8 @@
+---
+# Setup host names in /etc/hosts
+- hosts: all
+  tasks:
+  - name: make /etc/hosts
+    template:
+      src: etc.hosts.j2
+      dest: /etc/hosts

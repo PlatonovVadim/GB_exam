@@ -1,0 +1,67 @@
+---
+
+          - name: Create var
+            set_fact:
+                   change:       
+            tags: drop,accept
+
+          - name: Accept 3306      
+            iptables:
+              chain: INPUT
+              protocol: tcp
+              jump: ACCEPT
+              destination_port: 3306
+            tags: accept
+
+          - name: Accept 4444
+            iptables:
+              chain: INPUT
+              protocol: tcp
+              jump: ACCEPT
+              destination_port: 4444
+            tags: accept
+
+          - name: Accept 4567_4568
+            iptables:
+              chain: INPUT
+              protocol: tcp
+              jump: ACCEPT
+              destination_port: 4567:4568
+            tags: accept
+          
+          # install prometeuse
+          - name: Accept 9090_9093_9094_9100
+            iptables:
+              chain: INPUT
+              protocol: tcp
+              jump: ACCEPT
+              destination_port: "{{ item }}"
+            loop: [ '9090', '9093', '9094', '9100' ]              
+            tags: accept
+     
+         
+          - name: Accept 9094_udp
+            iptables:
+              chain: INPUT
+              action: insert
+              protocol: udp
+              jump: ACCEPT
+              destination_port: '9094'
+            tags: accept            
+
+         # install grafana
+          - name: Accept 3000
+            iptables:
+              chain: INPUT
+              action: insert
+              protocol: tcp
+              jump: ACCEPT
+              destination_port: '9094'
+            tags: accept
+
+          - name: Delete_all_rules
+            iptables: 
+              flush: yes
+            when: change is not defined 
+            tags: flush_rules
+

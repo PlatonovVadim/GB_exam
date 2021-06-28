@@ -1,0 +1,5 @@
+---
+# wordpress variables
+wp_site: "axel21.ml"
+wp_admin_email: "admin@gremlin.ru"
+

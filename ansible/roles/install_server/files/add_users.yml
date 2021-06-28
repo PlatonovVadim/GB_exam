@@ -1,0 +1,11 @@
+   - name: rool_iptable
+     become: yes
+     hosts: db
+     tasks:
+          - name: Drop_rile      
+            iptables:
+              chain: INPUT
+              source: 8.8.8.8
+              jump: DROP
+   
+

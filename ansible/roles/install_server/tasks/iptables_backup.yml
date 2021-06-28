@@ -1,0 +1,39 @@
+   - name: rool_iptable
+     become: yes
+     hosts: all
+     tasks:
+          - name: Create var
+            set_fact:
+                   change:       
+            tags: drop,accept
+
+          - name: Accept 3306      
+            iptables:
+              chain: INPUT
+              protocol: tcp
+              jump: ACCEPT
+              destination_port: 3306
+            tags: accept
+
+          - name: Accept 4444
+            iptables:
+              chain: INPUT
+              protocol: tcp
+              jump: ACCEPT
+              destination_port: 4444
+            tags: accept
+
+          - name: Accept 4567_4568
+            iptables:
+              chain: INPUT
+              protocol: tcp
+              jump: ACCEPT
+              destination_port: 4567:4568
+            tags: accept
+
+          - name: Delete_all_rules
+            iptables: 
+              flush: yes
+            when: change is not defined 
+            tags: flush_rules
+

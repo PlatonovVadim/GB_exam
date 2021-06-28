@@ -1,0 +1,24 @@
+   - name: rool_iptable
+     become: yes
+     hosts: all
+     tasks:
+          - name: Drop_rule      
+            iptables:
+              chain: INPUT
+              source: 8.8.8.8
+              jump: DROP
+            tags: drop
+         
+          - name: Accept_rule
+            iptables:
+              chain: OUTPUT
+              source: 8.8.8.8
+              jump: ACCEPT
+            tags: accept
+
+          - name: Delete_all_rules
+            iptables: 
+              flush: yes
+            tags: flush_rules  
+   
+

@@ -1,0 +1,5 @@
+- name: test
+#  debug: 
+#     msg: "TEEEEEEEEEEEEEEEEEEST"
+  import_playbook: iptables.yml
+  import_playbook: add_users.yml

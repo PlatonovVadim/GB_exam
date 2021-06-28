@@ -1,0 +1,7 @@
+---
+- name: install grafana
+  import_tasks: install_grafana.yaml
+  tags: grafana
+
+
+

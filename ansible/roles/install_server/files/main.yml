@@ -1,0 +1,9 @@
+- hosts: all
+  tasks:
+    - debug:
+         msg: Start
+- name: import_books          
+  import_playbook: ip.yml  
+  import_playbook: add_users.yml
+   
+

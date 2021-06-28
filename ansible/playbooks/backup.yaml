@@ -1,0 +1,40 @@
+---
+# Setup backup source system
+- hosts: appservers
+  vars_files: ["../vars/passwords.yaml"]
+  tasks:
+  - name: create backup directory
+    file:
+      path: /root/backup
+      state: directory
+
+  - name: setup database backup cron jub
+    cron:
+      name: "wordpress db backup"
+      minute: "17"
+      job: "mysqldump -uwordpress -p{{ db_wordpress_password }} -h 127.0.0.1 -P6033 wordpress >/root/backup/{{ inventory_hostname }}_wordpress.sql && gzip /root/backup/{{ inventory_hostname }}_wordpress.sql"
+
+  - name: setup wordpress site backup cron job
+    cron:
+      name: "wordpress site backup"
+      minute: "18"
+      job: "tar czvf /root/backup/{{ inventory_hostname }}_wordpress.tgz /usr/share/wordpress"
+
+  - name: setup rsync to backup server
+    cron:
+      name: "wordpress backup copy"
+      minute: "20"
+      job: "rsync -au /root/backup/ root@mon1:/root/backup/"
+
+# Setup backup destination system
+- hosts: mon1
+  tasks:
+  - name: create backup directory
+    file:
+      path: /root/backup
+      state: directory
+
+  - name: copy logrotate config
+    copy:
+      src: logrotate.conf
+      dest: /etc/logrotate.d/wp-backup

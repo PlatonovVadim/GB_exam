@@ -1,0 +1,6 @@
+---
+# Host variables
+
+# packages to be installed for all machines
+all_packages: ['mc', 'wget', 'curl', 'nano', 'atop', 'htop', 'iotop', 'net-tools']
+

@@ -1,0 +1,5 @@
+---
+# vars file for Prometheus
+test: 32
+prometheus_version: 2.28.0
+alertmanager_version: 0.22.2

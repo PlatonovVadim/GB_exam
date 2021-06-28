@@ -1,0 +1,66 @@
+---
+# Install and setup Nginx
+- hosts: appservers
+  tasks:
+  - name: install nginx packages
+    apt:
+      name: ['nginx', 'php-fpm']
+      update_cache: yes
+
+  - name: configure php-fpm port listening
+    lineinfile:
+      path: /etc/php/7.4/fpm/pool.d/www.conf
+      regexp: '^;?listen =' 
+      line: 'listen = 0.0.0.0:9000'
+
+  - name: configure ssl snippet
+    copy:
+      src: self-signed.conf
+      dest: /etc/nginx/snippets/self-signed.conf
+
+  - name: copy ssl cert
+    copy:
+      src: nginx-selfsigned.crt
+      dest: /etc/ssl/certs/nginx-selfsigned.crt
+
+  - name: copy ssl key
+    copy:
+      src: nginx-selfsigned.key
+      dest: /etc/ssl/private/nginx-selfsigned.key
+      mode: '0600'
+
+  - name: configure ssl params
+    copy:
+      src: ssl-params.conf
+      dest: /etc/nginx/snippets/ssl-params.conf
+
+  - name: copy ssl dhparam
+    copy:
+      src: dhparam.pem
+      dest: /etc/ssl/certs/dhparam.pem
+
+  - name: create under-construction site
+    copy:
+      src: index.html
+      dest: /var/www/html/
+
+  - name: create nginx site configurations
+    copy:
+      src: nginx_default.cfg
+      dest: /etc/nginx/sites-available/default
+
+  - name: link nginx site configuration
+    file:
+      src: /etc/nginx/sites-available/default
+      dest: /etc/nginx/sites-enabled/default
+      state: link
+
+  - name: restart php-fpm
+    systemd:
+      name: php7.4-fpm
+      state: restarted
+
+  - name: restart nginx
+    systemd:
+      name: nginx
+      state: restarted

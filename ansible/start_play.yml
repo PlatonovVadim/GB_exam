@@ -1,0 +1,26 @@
+---
+# combined playbook to start all playbooks in order
+
+- import_playbook: playbooks/install_packages.yaml
+  tags: packages
+
+- import_playbook: playbooks/network.yaml
+  tags: network
+
+- import_playbook: playbooks/galera.yaml
+  tags: galera
+
+- import_playbook: playbooks/proxysql.yaml
+  tags: proxysql
+
+- import_playbook: playbooks/nginx.yaml
+  tags: nginx
+
+- import_playbook: playbooks/wordpress.yaml
+  tags: wordpress
+
+- import_playbook: playbooks/unison.yaml
+  tags: unison
+
+- import_playbook: playbooks/backup.yaml
+  tags: backup

@@ -1,0 +1,102 @@
+---
+# Install and setup WordPress
+- hosts: appservers
+  vars_files: ["../vars/passwords.yaml", "../vars/wordpress.yaml"]
+  tasks:
+          
+  - name: install WordPress package
+    apt:
+      name: ['wordpress', 'wordpress-theme-twentynineteen']
+      state: latest
+      update_cache: yes
+
+  - name: install required php packages for WordPress
+    apt:
+      name: ['php7.4-mbstring', 'php7.4-xml', 'php7.4-xmlrpc', 'php7.4-intl', 'php7.4-soap', 'php7.4-cli', 'php7.4-curl', 'php7.4-mysql', 'php7.4-zip']
+      update_cache: yes
+
+  - name: install packages for htpasswd
+    apt:
+      name: 'apache2-utils'
+      state: present
+
+  - name: restart php-fpm with new modules
+    systemd:
+      name: 'php7.4-fpm'
+      state: restarted
+
+#  - name: stop and disable Apache installed by WordPress
+#    systemd:
+#      name: 'apache2'
+#      state: stopped
+#      enabled: no
+
+  - name: create wordpress nginx site
+    template:
+      src: nginx_wordpress.cfg
+      dest: /etc/nginx/sites-available/{{ wp_site }}
+
+  - name: link wordpress nginx site
+    file:
+      src: /etc/nginx/sites-available/{{ wp_site }}
+      dest: /etc/nginx/sites-enabled/{{ wp_site }}
+      state: link
+
+  - name: link wordpress files
+    file:
+      src: /usr/share/wordpress
+      dest: /var/www/wordpress
+      state: link
+
+  - name: restart nginx
+    systemd:
+      name: nginx
+      state: restarted
+
+  - name: create wordpress wp-config.php
+    template:
+      src: wp-config.php
+      dest: /usr/share/wordpress/wp-config.php
+      backup: yes
+    tags: wpconfig
+
+  - name: protect wordpress site with password
+    command: "htpasswd -b -c /etc/nginx/htpasswd web {{ app_web_password }}"
+    args:
+     creates: /etc/nginx/htpasswd
+    no_log: True
+
+  - name: update wordpress site with password
+    command: "htpasswd -b /etc/nginx/htpasswd web {{ app_web_password }}"
+    no_log: True
+
+# finish nginx installation only on one server
+# need to provide domain name from the variable
+- hosts: appservers[0]
+  vars_files: ["../vars/passwords.yaml", "../vars/wordpress.yaml"]
+  vars:
+    website: axel21.ml
+  tasks:
+  - name: finish wordpress website installation
+    uri:
+      url: https://{{ wp_site }}/wp-admin/install.php?step=2
+      url_username: web
+      url_password: "{{ app_web_password }}"
+      validate_certs: no
+      method: POST
+      body_format: form-urlencoded
+      body:
+#        language: ru_RU
+        weblog_title: WordPress 
+        user_name: admin
+        admin_email: "{{ wp_admin_email }}"
+        admin_password: "{{ wp_admin_password }}"
+        admin_password2: "{{ wp_admin_password }}"
+        blog_public: 0
+#    no_log: True
+    tags: wpinstall
+
+  - name: restart nginx
+    systemd:
+      name: nginx
+      state: restarted

@@ -1,0 +1,40 @@
+---
+# Install and setup ProxySQL
+- hosts: appservers
+  vars_files: "../vars/passwords.yaml"
+  tasks:
+  - name: add lsb-release package
+    apt:
+      name: 'lsb-release'
+      update_cache: yes
+
+  - name: set up ProxySQL repo key
+    shell: "wget -O - https://repo.proxysql.com/ProxySQL/repo_pub_key | apt-key add - "
+    args:
+      creates: /etc/apt/sources.list.d/proxysql.list
+
+  - name: set up ProxySQL repo
+    shell: "echo deb https://repo.proxysql.com/ProxySQL/proxysql-2.1.x/$(lsb_release -sc)/ ./ | tee /etc/apt/sources.list.d/proxysql.list"
+    args:
+      creates: /etc/apt/sources.list.d/proxysql.list
+
+  - name: install ProxySQL packages
+    apt:
+      name: ['proxysql', 'mariadb-client']
+      update_cache: yes
+
+  - name: stop ProxySQL service
+    systemd:
+      name: proxysql
+      state: stopped
+
+  - name: setup proxysql config
+    template:
+      src: proxysql.cnf
+      dest: /etc/proxysql.cnf
+    no_log: True
+
+  - name: reinitialise and start ProxySQL service
+    systemd:
+      name: proxysql-initial
+      state: restarted

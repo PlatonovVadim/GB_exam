@@ -1,0 +1,17 @@
+# {{ ansible_managed }}
+127.0.0.1   localhost
+
+# db servers
+{% for host in groups['dbservers'] %}
+{{ hostvars[host]['ansible_host'] }} {{ host }}
+{% endfor %}
+
+# app servers
+{% for host in groups['appservers'] %}
+{{ hostvars[host]['ansible_host'] }} {{ host }}
+{% endfor %}
+
+# mon servers
+{% for host in groups['monservers'] %}
+{{ hostvars[host]['ansible_host'] }} {{ host }}
+{% endfor %}

@@ -1,0 +1,16 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+
+  - name: add hosts
+    lineinfile:
+      dest: /etc/hosts
+      line: '{{ item }}'
+    with_items:
+      - '87.239.110.163 db01'
+      - '95.163.181.240 db02'
+      - '89.208.208.226 db03'
+      - '89.208.229.210 app1'
+      - '87.239.106.96 app2'
+      - '146.185.208.233 monitoring'

@@ -1,0 +1,116 @@
+---
+# Setup Galera (MariaDB) cluster
+
+# Install required packages on all db hosts
+- hosts: dbservers
+  tasks:
+
+  - name: install MySQL Python packages for Ansible
+    apt: 
+      name: ['python3-pymysql']
+      update_cache: yes
+
+  - name: add https transport for apt
+    apt:
+      name: 'apt-transport-https'
+      update_cache: yes
+
+  - name: set up MariaDB repo
+    shell: "curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | bash"
+    args:
+      creates: /etc/apt/sources.list.d/mariadb.list 
+
+  - name: install MariaDB packages
+    apt:
+      name: ['mariadb-common', 'mariadb-client', 'mariadb-server']
+      update_cache: yes
+
+# Stop MariaDB other nodes
+- hosts: dbservers[1:]
+  tasks:
+
+  - name: make sure that MariaDB is stopped
+    systemd:
+      name: mariadb
+      state: stopped
+
+# Stop MariaDB first node
+- hosts: dbservers[0]
+  tasks:
+
+  - name: make sure that MariaDB is stopped
+    systemd:
+      name: mariadb
+      state: stopped
+
+# Setup and start the first node
+- hosts: dbservers[0]
+  vars_files: "../vars/passwords.yaml"
+  tasks:
+
+  - name: setup Galera config
+    template:
+      src: 60-galera-first.j2
+      dest: /etc/mysql/mariadb.conf.d/60-galera.cnf
+
+  - name: initialize new cluster
+    shell: "galera_new_cluster"
+
+  - name: create galera database
+    mysql_db:
+      name: galera
+      state: present
+      login_unix_socket: /run/mysqld/mysqld.sock
+
+  - name: create database user galera
+    mysql_user:
+      name: galera
+      host: '%'
+      password: "{{ db_galera_password }}"
+      priv: 'galera.*:ALL,GRANT'
+      state: present
+      login_unix_socket: /run/mysqld/mysqld.sock
+    no_log: True
+
+  - name: create wordpress database
+    mysql_db:
+      name: wordpress
+      state: present
+      login_unix_socket: /run/mysqld/mysqld.sock
+
+  - name: create database user wordpress
+    mysql_user:
+      name: wordpress
+      host: '%'
+      password: "{{ db_wordpress_password }}"
+      priv: 'wordpress.*:ALL,GRANT'
+      state: present
+      login_unix_socket: /run/mysqld/mysqld.sock
+    no_log: True
+
+  - name: create monitor user
+    mysql_user:
+      name: monitor
+      host: '%'
+      password: "{{ db_monitor_password }}"
+      state: present
+      login_unix_socket: /run/mysqld/mysqld.sock
+    no_log: True
+
+# Setup configs on all nodes
+- hosts: dbservers
+  tasks:
+
+  - name: setup Galera config
+    template:
+      src: 60-galera-all.j2
+      dest: /etc/mysql/mariadb.conf.d/60-galera.cnf
+
+# Join cluster on the rest of nodes
+- hosts: dbservers[1:]
+  tasks:
+
+  - name: join cluster
+    systemd:
+      name: mariadb
+      state: restarted

@@ -1,0 +1,29 @@
+-- Lsyncd configuration for unison
+
+settings  {
+    logfile = "/var/log/lsyncd/lsyncd.log",
+    statusFile = "/var/log/lsyncd/lsyncd.status",
+    statusInterval = 5
+}
+
+unisonCmd = "export HOME='/root'; /usr/bin/unison -batch ^source ^target"
+
+unison = {
+    delay = 15,
+    onAttrib = unisonCmd,
+    onCreate = unisonCmd,
+    onDelete = unisonCmd,
+    onModify = unisonCmd,
+    onMove = unisonCmd,
+}
+
+{% for host in groups['appservers'] %}
+{% if host != inventory_hostname %}
+sync {
+    unison,
+    source = "/var/www/wordpress",
+    target = "ssh://root@{{ host }}//var/www/wordpress"
+}
+
+{% endif %}
+{% endfor %}
